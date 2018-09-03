@@ -1,0 +1,27 @@
+Bundle-Name: OpenEMS Edge Bridge Microcare-Comms
+Bundle-Vendor: Microcare (Destrier Electronics Pty Ltd)
+Bundle-License: Proprietary
+Bundle-Version: 1.0.0.${tstamp}
+
+Export-Package:  \
+	io.openems.edge.bridge.mc_comms.api;-provide=true,\
+    io.openems.edge.bridge.mc_comms.api.task,\
+    io.openems.edge.bridge.mc_comms.api.element,\
+    io.openems.edge.bridge.mc_comms
+
+Private-Package:  \
+	io.openems.edge.bridge.mc_comms
+
+-includeresource: {readme.md}
+
+-buildpath: \
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.common;version=latest,\
+	io.openems.common;version=latest,\
+	com.google.gson,\
+	com.google.guava,\
+	com.fazecast.jSerialComm
+
+-testpath: \
+	osgi.enroute.junit.wrapper;version=4.12, \
+	osgi.enroute.hamcrest.wrapper;version=1.3
