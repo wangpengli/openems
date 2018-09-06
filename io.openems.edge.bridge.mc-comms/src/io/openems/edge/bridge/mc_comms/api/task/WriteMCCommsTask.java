@@ -5,7 +5,7 @@ import io.openems.edge.bridge.mc_comms.BridgeMCComms;
 import io.openems.edge.common.taskmanager.ManagedTask;
 import io.openems.edge.common.taskmanager.Priority;
 
-public interface WriteTask extends Task, ManagedTask {
+public interface WriteMCCommsTask extends MCCommsTask, ManagedTask {
 
     void executeWrite(BridgeMCComms bridge) throws OpenemsException;
 

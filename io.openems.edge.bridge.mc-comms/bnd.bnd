@@ -5,7 +5,7 @@ Bundle-Version: 1.0.0.${tstamp}
 
 Export-Package:  \
 	io.openems.edge.bridge.mc_comms.api;-provide=true,\
-    io.openems.edge.bridge.mc_comms.api.task,\
+    io.openems.edge.bridge.mc_comms.api.mccommstask,\
     io.openems.edge.bridge.mc_comms.api.element,\
     io.openems.edge.bridge.mc_comms
 

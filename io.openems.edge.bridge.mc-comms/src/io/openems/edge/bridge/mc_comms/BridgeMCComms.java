@@ -1,9 +1,9 @@
 package io.openems.edge.bridge.mc_comms;
 
+import com.fazecast.jSerialComm.SerialPort;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.StateCollectorChannel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -14,11 +14,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.metatype.annotations.Designate;
-import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 
@@ -29,10 +26,11 @@ public class BridgeMCComms extends AbstractOpenemsComponent implements OpenemsCo
 
 	private final Multimap<String, MCCommsProtocol> protocols = Multimaps
 			.synchronizedListMultimap(ArrayListMultimap.create());
-
-	private MCCommsWorker worker = new MCCommsWorker(this, Multimaps.synchronizedListMultimap(ArrayListMultimap.create()));
-
+	private MCCommsWorker worker = new MCCommsWorker(this);
 	private String portName = "";
+	private SerialPort serialPort;
+	private int masterAddress;
+
 
 
 	public BridgeMCComms() {
@@ -46,8 +44,34 @@ public class BridgeMCComms extends AbstractOpenemsComponent implements OpenemsCo
 				})).flatMap(channel -> channel).forEach(channel -> this.addChannel(channel));
 	}
 
+	/**
+	 * Adds the protocol
+	 *
+	 * @param sourceId
+	 * @param protocol
+	 */
+	public void addProtocol(String sourceId, MCCommsProtocol protocol) {
+		this.protocols.put(sourceId, protocol);
+	}
+
+	/**
+	 * Removes the protocol
+	 */
+	public void removeProtocol(String sourceId) {
+		this.protocols.removeAll(sourceId);
+	}
+
+
 	public Multimap<String, MCCommsProtocol> getProtocols() {
 		return protocols;
+	}
+
+	public int getMasterAddress() {
+		return masterAddress;
+	}
+
+	public SerialPort getSerialPort() {
+		return serialPort;
 	}
 
 	@Override
@@ -67,10 +91,18 @@ public class BridgeMCComms extends AbstractOpenemsComponent implements OpenemsCo
 		if (this.isEnabled()) {
 			this.worker.activate(config.id());
 		}
+		this.serialPort = SerialPort.getCommPort(config.portName());
+		this.serialPort.setComPortParameters(9600, 8, 0, 0);
+		this.serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 25, 0);
+		this.masterAddress = config.masterAddress();
+		this.serialPort.openPort();
 	}
 
 	@Deactivate
-	void deactivate() {
+	protected void deactivate() {
+		this.worker.deactivate();
+		this.serialPort.closePort();
+		super.deactivate();
 	}
 
 

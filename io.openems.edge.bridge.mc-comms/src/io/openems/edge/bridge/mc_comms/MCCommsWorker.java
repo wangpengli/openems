@@ -2,8 +2,8 @@ package io.openems.edge.bridge.mc_comms;
 
 import com.google.common.collect.Multimap;
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.bridge.mc_comms.api.task.ReadTask;
-import io.openems.edge.bridge.mc_comms.api.task.WriteTask;
+import io.openems.edge.bridge.mc_comms.api.task.ReadMCCommsTask;
+import io.openems.edge.bridge.mc_comms.api.task.WriteMCCommsTask;
 import io.openems.edge.common.worker.AbstractCycleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class MCCommsWorker extends AbstractCycleWorker {
     @Override
     protected void forever() {
         // get the read tasks for this run
-        List<ReadTask> nextReadTasks = this.getNextReadTasks();
+        List<ReadMCCommsTask> nextReadTasks = this.getNextReadTasks();
 
         /*
          * execute next read tasks
@@ -48,43 +48,37 @@ public class MCCommsWorker extends AbstractCycleWorker {
             try {
                 readTask.executeQuery(bridge);
             } catch (OpenemsException e) {
-                // TODO remember defective unitid
-                logError(log, readTask.toString() + " read failed: " + e.getMessage());
+                logError(logger, readTask.toString() + " read failed: " + e.getMessage());
             }
         });
     }
 
     /**
-     * Returns the 'nextReadTasks' list.
+     * Log an error message including the Component ID.
      *
-     * This checks if a device is listed as defective and - if it is - adds only one
-     * abstractTask with this unitId to the queue
+     * @param log
+     * @param message
      */
-    private List<ReadTask> getNextReadTasks() {
-        List<ReadTask> result = new ArrayList<>();
+    protected void logError(Logger log, String message) {
+        log.error("[" + this.bridge.id() + "] " + message);
+    }
+
+    /**
+     * Returns the 'nextReadTasks' list.
+     */
+    private List<ReadMCCommsTask> getNextReadTasks() {
+        List<ReadMCCommsTask> result = new ArrayList<>();
         protocols.values().forEach(protocol -> {
             // get the next read tasks from the protocol
-            List<ReadTask> nextReadTasks = protocol.getNextReadTasks();
-            // check if the unitId is defective
-            // int unitId = protocol.getUnitId();
-            // FIXME: if we do the following in here, we will eventually miss the
-            // ONCE-priority tasks
-            // if (nextReadTasks.size() > 0 && defectiveUnitIds.contains(unitId)) {
-            // // it is defective. Add only one read abstractTask.
-            // // This avoids filling the queue with requests that cannot be fulfilled
-            // anyway
-            // // because the unitId is not reachable
-            // result.add(nextReadTasks.get(0));
-            // } else {
-            // add all tasks to the next tasks
+            List<ReadMCCommsTask> nextReadTasks = protocol.getNextReadTasks();
             result.addAll(nextReadTasks);
             // }
         });
         return result;
     }
 
-    private List<WriteTask> getNextWriteTasks() {
-        List<WriteTask> result = new ArrayList<>();
+    private List<WriteMCCommsTask> getNextWriteTasks() {
+        List<WriteMCCommsTask> result = new ArrayList<>();
         protocols.values().forEach(protocol -> {
             result.addAll(protocol.getNextWriteTasks());
         });
