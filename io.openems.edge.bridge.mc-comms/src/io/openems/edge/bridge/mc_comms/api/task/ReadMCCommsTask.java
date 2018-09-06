@@ -1,7 +1,7 @@
 package io.openems.edge.bridge.mc_comms.api.task;
 
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.bridge.mc_comms.BridgeMCComms;
+import io.openems.edge.bridge.mc_comms.MCCommsBridge;
 import io.openems.edge.bridge.mc_comms.MCCommsPacketListener;
 import io.openems.edge.bridge.mc_comms.api.element.MCCommsElement;
 import io.openems.edge.common.taskmanager.ManagedTask;
@@ -25,7 +25,7 @@ public class ReadMCCommsTask extends AbstractMCCommsTask implements MCCommsTask,
      * @param bridge
      * @throws OpenemsException
      */
-    public <T> void executeQuery(BridgeMCComms bridge) throws OpenemsException
+    public <T> void executeQuery(MCCommsBridge bridge) throws OpenemsException
     {
         this.listener = new MCCommsPacketListener(this.getProtocol().getSlaveAddress(), bridge);
         this.listener.addOnReadCallback(payload -> {

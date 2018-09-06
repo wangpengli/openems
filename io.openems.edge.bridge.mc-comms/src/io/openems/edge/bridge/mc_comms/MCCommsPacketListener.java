@@ -14,7 +14,7 @@ public class MCCommsPacketListener implements SerialPortPacketListener {
     private final int destinationAddress;
     private Consumer<byte[]> onReadCallback;
 
-    public MCCommsPacketListener(int sourceAddress, BridgeMCComms bridge) {
+    public MCCommsPacketListener(int sourceAddress, MCCommsBridge bridge) {
         this.sourceAddress = sourceAddress;
         this.destinationAddress = bridge.getMasterAddress();
         bridge.getSerialPort().addDataListener(this);

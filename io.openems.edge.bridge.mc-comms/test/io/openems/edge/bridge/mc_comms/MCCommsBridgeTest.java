@@ -9,7 +9,7 @@ import static org.junit.Assert.assertNotNull;
  *
  */
 
-public class BridgeMCCommsTest {
+public class MCCommsBridgeTest {
 
 	/*
 	 * Example test method
@@ -17,7 +17,7 @@ public class BridgeMCCommsTest {
 
 	@Test
 	public void simple() {
-		BridgeMCComms impl = new BridgeMCComms();
+		MCCommsBridge impl = new MCCommsBridge();
 		assertNotNull(impl);
 	}
 

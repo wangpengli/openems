@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 @Designate( ocd= Config.class, factory=true)
 
 @Component(name="io.openems.edge.bridge.mc-comms")
-public class BridgeMCComms extends AbstractOpenemsComponent implements OpenemsComponent, EventHandler {
+public class MCCommsBridge extends AbstractOpenemsComponent implements OpenemsComponent, EventHandler {
 
 	private final Multimap<String, MCCommsProtocol> protocols = Multimaps
 			.synchronizedListMultimap(ArrayListMultimap.create());
@@ -33,7 +33,7 @@ public class BridgeMCComms extends AbstractOpenemsComponent implements OpenemsCo
 
 
 
-	public BridgeMCComms() {
+	public MCCommsBridge() {
 		Stream.of(
 				Arrays.stream(OpenemsComponent.ChannelId.values()).map(channelId -> {
 					switch (channelId) {

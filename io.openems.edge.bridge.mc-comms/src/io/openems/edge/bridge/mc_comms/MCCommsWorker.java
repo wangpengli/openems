@@ -14,11 +14,11 @@ import java.util.List;
 
 public class MCCommsWorker extends AbstractCycleWorker {
 
-    private final BridgeMCComms bridge;
+    private final MCCommsBridge bridge;
     private final Logger logger = LoggerFactory.getLogger(MCCommsWorker.class);
     private final Multimap<String, MCCommsProtocol> protocols;
 
-    MCCommsWorker(BridgeMCComms bridge) {
+    MCCommsWorker(MCCommsBridge bridge) {
         this.bridge = bridge;
         this.protocols = bridge.getProtocols();
     }
