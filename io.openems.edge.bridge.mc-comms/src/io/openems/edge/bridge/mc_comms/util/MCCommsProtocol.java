@@ -1,4 +1,4 @@
-package io.openems.edge.bridge.mc_comms;
+package io.openems.edge.bridge.mc_comms.util;
 
 import io.openems.edge.bridge.mc_comms.api.task.MCCommsTask;
 import io.openems.edge.bridge.mc_comms.api.task.ReadMCCommsTask;

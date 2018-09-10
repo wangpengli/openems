@@ -1,7 +1,8 @@
-package io.openems.edge.bridge.mc_comms;
+package io.openems.edge.bridge.mc_comms.util;
 
 import com.google.common.collect.Multimap;
 import io.openems.common.exceptions.OpenemsException;
+import io.openems.edge.bridge.mc_comms.MCCommsBridge;
 import io.openems.edge.bridge.mc_comms.api.task.ReadMCCommsTask;
 import io.openems.edge.bridge.mc_comms.api.task.WriteMCCommsTask;
 import io.openems.edge.common.worker.AbstractCycleWorker;
@@ -18,7 +19,7 @@ public class MCCommsWorker extends AbstractCycleWorker {
     private final Logger logger = LoggerFactory.getLogger(MCCommsWorker.class);
     private final Multimap<String, MCCommsProtocol> protocols;
 
-    MCCommsWorker(MCCommsBridge bridge) {
+    public MCCommsWorker(MCCommsBridge bridge) {
         this.bridge = bridge;
         this.protocols = bridge.getProtocols();
     }

@@ -1,4 +1,4 @@
-package io.openems.edge.bridge.mc_comms;
+package io.openems.edge.bridge.mc_comms.util;
 
 import io.openems.common.exceptions.OpenemsException;
 
