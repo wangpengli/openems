@@ -13,8 +13,6 @@
 /bower_components
 
 # IDEs and editors
-
-#IntelliJ IDEA metadata & configs
 /.idea
 *.iml
 *.eml
