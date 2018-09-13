@@ -24,10 +24,8 @@ public class MCCommsProtocol {
 
     private final Logger log = LoggerFactory.getLogger(MCCommsProtocol.class);
 
-    private final int slaveAddress;
 
-    public MCCommsProtocol(int slaveAddress, MCCommsTask... MCCommsTasks) {
-        this.slaveAddress = slaveAddress;
+    public MCCommsProtocol(MCCommsTask... MCCommsTasks) {
         for (MCCommsTask mcCommsTask : MCCommsTasks) {
             mcCommsTask.setProtocol(this);
             addTask(mcCommsTask);
@@ -35,12 +33,7 @@ public class MCCommsProtocol {
 
     }
 
-    public int getSlaveAddress() {
-        return slaveAddress;
-    }
-
     private synchronized void addTask(MCCommsTask MCCommsTask) {
-        MCCommsTask.setDestinationAddress(this.slaveAddress);
         if (MCCommsTask instanceof WriteMCCommsTask) {
             this.writeTaskManager.addTask((WriteMCCommsTask) MCCommsTask);
         }

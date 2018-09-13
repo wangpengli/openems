@@ -7,7 +7,9 @@ public class MCCommsTXPacket extends MCCommsPacket {
 
     private ByteBuffer packetBuffer = ByteBuffer.allocate(25);
 
-    public MCCommsTXPacket(int command, int sourceAddress, int destinationAddress, byte[] payload) {
+    public MCCommsTXPacket(int command, int sourceAddress, int destinationAddress, byte[] payload) throws MCCommsException {
+        if (payload.length != 15)
+            throw new MCCommsException("[MCCOMMS] payload too short! expected payload byte length 15 but found byte length " + payload.length);
         this.command = command;
         this.sourceAddress = sourceAddress;
         this.destinationAddress = destinationAddress;
@@ -19,7 +21,7 @@ public class MCCommsTXPacket extends MCCommsPacket {
         this.command = command;
         this.sourceAddress = sourceAddress;
         this.destinationAddress = destinationAddress;
-        for (int i = 7; i < 21; i++) {
+        for (int i = 0; i < 15; i++) {
             this.payload[i] = (byte) 0xAA;
         }
         this.createPacketBuffer();
@@ -28,9 +30,9 @@ public class MCCommsTXPacket extends MCCommsPacket {
 
     private void createPacketBuffer() {
         this.packetBuffer.put((byte) 83); //S start byte
-        this.packetBuffer.put(ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putInt(this.destinationAddress).array());
-        this.packetBuffer.put(ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putInt(this.sourceAddress).array());
-        this.packetBuffer.put((byte) this.command);
+        this.packetBuffer.put(ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putInt(this.destinationAddress).array()); //destination address
+        this.packetBuffer.put(ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putInt(this.sourceAddress).array()); //source address
+        this.packetBuffer.put((byte) this.command); //
         this.packetBuffer.put(this.payload);
         int CRC = 0;
         for (int i = 1; i < 21; i++) {
@@ -41,7 +43,7 @@ public class MCCommsTXPacket extends MCCommsPacket {
         this.packetBuffer.put((byte) 69); //E end byte
     }
 
-    public ByteBuffer getPacketBuffer() {
+    ByteBuffer getPacketBuffer() {
         return packetBuffer;
     }
 }

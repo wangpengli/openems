@@ -31,7 +31,7 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements OpenemsCo
 	private final Multimap<String, MCCommsProtocol> protocols = Multimaps
 			.synchronizedListMultimap(ArrayListMultimap.create());
 	private final Logger logger = LoggerFactory.getLogger(MCCommsBridge.class);
-	private MCCommsWorker worker = new MCCommsWorker(this);
+	private MCCommsWorker worker = new MCCommsWorker(this.protocols);
 	private String portName = "";
 	private SerialPort serialPort;
 	private int masterAddress;

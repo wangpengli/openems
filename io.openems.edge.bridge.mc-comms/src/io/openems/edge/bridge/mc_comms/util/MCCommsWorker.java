@@ -15,13 +15,11 @@ import java.util.List;
 
 public class MCCommsWorker extends AbstractCycleWorker {
 
-    private final MCCommsBridge bridge;
     private final Logger logger = LoggerFactory.getLogger(MCCommsWorker.class);
     private final Multimap<String, MCCommsProtocol> protocols;
 
-    public MCCommsWorker(MCCommsBridge bridge) {
-        this.bridge = bridge;
-        this.protocols = bridge.getProtocols();
+    public MCCommsWorker(Multimap<String, MCCommsProtocol> protocols) {
+        this.protocols = protocols;
     }
 
     @Override
@@ -47,7 +45,7 @@ public class MCCommsWorker extends AbstractCycleWorker {
              * Execute next read abstractTask
              */
             try {
-                readTask.executeQuery(bridge);
+                readTask.executeQuery();
             } catch (OpenemsException e) {
                 logError(logger, readTask.toString() + " read failed: " + e.getMessage());
             }
@@ -61,7 +59,7 @@ public class MCCommsWorker extends AbstractCycleWorker {
      * @param message
      */
     protected void logError(Logger log, String message) {
-        log.error("[" + this.bridge.id() + "] " + message);
+        log.error(message);
     }
 
     /**

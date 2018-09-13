@@ -6,44 +6,31 @@ import io.openems.edge.bridge.mc_comms.util.MCCommsException;
 import io.openems.edge.bridge.mc_comms.util.MCCommsTXPacket;
 import io.openems.edge.common.taskmanager.ManagedTask;
 import io.openems.edge.common.taskmanager.Priority;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
 public class WriteMCCommsTask extends AbstractMCCommsTask implements MCCommsTask, ManagedTask {
     private final boolean ackBeforeWrite;
-    private boolean success;
-    private final Logger logger = LoggerFactory.getLogger(WriteMCCommsTask.class);
 
-    WriteMCCommsTask(int command, Priority priority, boolean ackBeforeWrite, MCCommsElement<?>... elements) {
-        super(command, priority, elements);
+    WriteMCCommsTask(MCCommsBridge bridge, int slaveAddress, int command, Priority priority, boolean ackBeforeWrite, MCCommsElement<?>... elements) {
+        super(bridge, slaveAddress, command, priority, elements);
         this.ackBeforeWrite = ackBeforeWrite;
     }
 
     @Override
-    public void executeQuery(MCCommsBridge bridge) throws MCCommsException {
+    public void executeQuery() throws MCCommsException {
         //sends connection request before writing if ackBeforeWrite == true
+        int replyCommand = 1;
         if (ackBeforeWrite) {
-            this.sendCommandPacket(bridge, 0, reply -> {
-                if (reply.getCommand() != 1) {
-                    logger.debug("[MCCOMMS] Could not establish MCComms connection (reply command code: " + reply.getCommand() + ")");
-                }
-            });
+            this.packetHandler.writePacket(this.bridge, new MCCommsTXPacket(0, this.bridge.getMasterAddress(), this.slaveAddress));
+            replyCommand = this.packetHandler.readReply(this.slaveAddress, this.bridge).getCommand();
         }
-        MCCommsTXPacket packet = this.createPacket(bridge);
-        this.sender.writePacket(packet);
-    }
-
-    private synchronized void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-    private MCCommsTXPacket createPacket(MCCommsBridge bridge) {
+        if (replyCommand != 1)
+            throw new MCCommsException("[MCCOMMS] Could not establish MCComms connection (reply command code: " + replyCommand + ")");
         ByteBuffer packetBuffer = ByteBuffer.allocate(15);
         for (MCCommsElement<?> element : this.elements) {
             packetBuffer.put(element._getRawValue().array(), element.getByteAddress(), element.getNumBytes());
         }
-        return new MCCommsTXPacket(this.command, bridge.getMasterAddress(), this.getProtocol().getSlaveAddress(), packetBuffer.array());
+        this.packetHandler.writePacket(bridge, new MCCommsTXPacket(this.command, bridge.getMasterAddress(), this.slaveAddress, packetBuffer.array()));
     }
 }
