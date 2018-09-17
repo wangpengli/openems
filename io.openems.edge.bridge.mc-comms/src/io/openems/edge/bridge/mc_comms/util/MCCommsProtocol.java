@@ -1,6 +1,6 @@
 package io.openems.edge.bridge.mc_comms.util;
 
-import io.openems.edge.bridge.mc_comms.api.task.MCCommsTask;
+import io.openems.edge.bridge.mc_comms.api.task.AbstractMCCommsTask;
 import io.openems.edge.bridge.mc_comms.api.task.ReadMCCommsTask;
 import io.openems.edge.bridge.mc_comms.api.task.WriteMCCommsTask;
 import io.openems.edge.common.taskmanager.TaskManager;
@@ -25,15 +25,15 @@ public class MCCommsProtocol {
     private final Logger log = LoggerFactory.getLogger(MCCommsProtocol.class);
 
 
-    public MCCommsProtocol(MCCommsTask... MCCommsTasks) {
-        for (MCCommsTask mcCommsTask : MCCommsTasks) {
+    public MCCommsProtocol(AbstractMCCommsTask... MCCommsTasks) {
+        for (AbstractMCCommsTask mcCommsTask : MCCommsTasks) {
             mcCommsTask.setProtocol(this);
             addTask(mcCommsTask);
         }
 
     }
 
-    private synchronized void addTask(MCCommsTask MCCommsTask) {
+    private synchronized void addTask(AbstractMCCommsTask MCCommsTask) {
         if (MCCommsTask instanceof WriteMCCommsTask) {
             this.writeTaskManager.addTask((WriteMCCommsTask) MCCommsTask);
         }

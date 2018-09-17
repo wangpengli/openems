@@ -2,7 +2,7 @@ package io.openems.edge.bridge.mc_comms.api.element;
 
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.types.OpenemsType;
-import io.openems.edge.bridge.mc_comms.api.task.MCCommsTask;
+import io.openems.edge.bridge.mc_comms.api.task.AbstractMCCommsTask;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -14,7 +14,7 @@ public abstract class MCCommsElement<T> {
 
     protected int byteAddress;
     protected int numBytes;
-    protected MCCommsTask mcCommsTask;
+    protected AbstractMCCommsTask mcCommsTask;
     protected OpenemsType type;
     protected byte[] rawValue;
     private final List<Consumer<T>> onUpdateCallbacks = new CopyOnWriteArrayList<>();
@@ -54,11 +54,11 @@ public abstract class MCCommsElement<T> {
         return numBytes;
     }
 
-    public MCCommsTask getMcCommsTask() {
+    public AbstractMCCommsTask getMcCommsTask() {
         return mcCommsTask;
     }
 
-    public void setMcCommsTask(MCCommsTask mcCommsTask) {
+    public void setMcCommsTask(AbstractMCCommsTask mcCommsTask) {
         this.mcCommsTask = mcCommsTask;
     }
 
