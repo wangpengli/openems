@@ -4,6 +4,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import io.openems.edge.bridge.mc_comms.util.MCCommsPacketBuffer;
 import io.openems.edge.bridge.mc_comms.util.MCCommsProtocol;
 import io.openems.edge.bridge.mc_comms.util.MCCommsWorker;
 import io.openems.edge.common.channel.StateCollectorChannel;
@@ -35,7 +36,7 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements OpenemsCo
 	private String portName = "";
 	private SerialPort serialPort;
 	private int masterAddress;
-
+	public MCCommsPacketBuffer IOPacketBuffer = new MCCommsPacketBuffer();
 
 
 	public MCCommsBridge() {
@@ -98,15 +99,17 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements OpenemsCo
 		}
 		this.serialPort = SerialPort.getCommPort(config.portName());
 		this.serialPort.setComPortParameters(9600, 8, 0, 0);
-		this.serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 25, 0);
+		this.serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);
 		this.masterAddress = config.masterAddress();
 		this.serialPort.openPort();
+		this.IOPacketBuffer.start(serialPort.getInputStream(), serialPort.getOutputStream());
 	}
 
 	@Deactivate
 	protected void deactivate() {
 		this.worker.deactivate();
 		this.serialPort.closePort();
+		this.IOPacketBuffer.stop();
 		super.deactivate();
 	}
 
