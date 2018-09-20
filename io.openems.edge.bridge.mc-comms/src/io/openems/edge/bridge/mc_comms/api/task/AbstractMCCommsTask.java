@@ -1,11 +1,9 @@
 package io.openems.edge.bridge.mc_comms.api.task;
 
-import io.openems.edge.bridge.mc_comms.MCCommsBridge;
-import io.openems.edge.bridge.mc_comms.util.*;
 import io.openems.edge.bridge.mc_comms.api.element.MCCommsElement;
+import io.openems.edge.bridge.mc_comms.util.MCCommsException;
+import io.openems.edge.bridge.mc_comms.util.MCCommsProtocol;
 import io.openems.edge.common.taskmanager.Priority;
-
-import java.util.concurrent.LinkedTransferQueue;
 
 public abstract class AbstractMCCommsTask {
 
@@ -13,18 +11,12 @@ public abstract class AbstractMCCommsTask {
     private final Priority priority;
     final int command;
     private MCCommsProtocol protocol;
-    protected MCCommsBridge bridge;
-    int slaveAddress;
-    LinkedTransferQueue<MCCommsPacket> transferQueue = new LinkedTransferQueue<>();
 
 
-    AbstractMCCommsTask(MCCommsBridge bridge, int slaveAddress, int command, Priority priority, MCCommsElement<?>... elements) {
-        this.bridge = bridge;
-        this.slaveAddress = slaveAddress;
+    AbstractMCCommsTask(int command, Priority priority, MCCommsElement<?>... elements) {
         this.priority = priority;
         this.elements = elements;
         this.command = command;
-        bridge.IOPacketBuffer.registerTransferQueue(slaveAddress, transferQueue);
     }
 
     public void setProtocol(MCCommsProtocol protocol) {

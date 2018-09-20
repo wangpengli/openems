@@ -4,33 +4,26 @@ import io.openems.edge.bridge.mc_comms.api.task.AbstractMCCommsTask;
 import io.openems.edge.bridge.mc_comms.api.task.ReadMCCommsTask;
 import io.openems.edge.bridge.mc_comms.api.task.WriteMCCommsTask;
 import io.openems.edge.common.taskmanager.TaskManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MCCommsProtocol {
 
-    /**
-     * TaskManager for ReadTasks
-     */
     private final TaskManager<ReadMCCommsTask> readTaskManager = new TaskManager<>();
-
-    /**
-     * TaskManager for WriteTasks
-     */
     private final TaskManager<WriteMCCommsTask> writeTaskManager = new TaskManager<>();
+    private final AtomicReference<AbstractMCCommsComponent> parentComponentAtomicRef;
 
-
-    private final Logger log = LoggerFactory.getLogger(MCCommsProtocol.class);
-
-
-    public MCCommsProtocol(AbstractMCCommsTask... MCCommsTasks) {
-        for (AbstractMCCommsTask mcCommsTask : MCCommsTasks) {
-            mcCommsTask.setProtocol(this);
-            addTask(mcCommsTask);
+    public MCCommsProtocol(AtomicReference<AbstractMCCommsComponent> parentComponentAtomicRef, AbstractMCCommsTask... MCCommsTasks) {
+        this.parentComponentAtomicRef = parentComponentAtomicRef;
+        for (AbstractMCCommsTask task : MCCommsTasks) {
+            task.setProtocol(this);
+            addTask(task);
         }
+    }
 
+    public AtomicReference<AbstractMCCommsComponent> getParentComponentAtomicRef() {
+        return parentComponentAtomicRef;
     }
 
     private synchronized void addTask(AbstractMCCommsTask MCCommsTask) {
@@ -43,11 +36,12 @@ public class MCCommsProtocol {
 
     }
 
+
     public List<ReadMCCommsTask> getNextReadTasks() {
-        return null; //TODO
+        return this.readTaskManager.getNextReadTasks();
     }
 
     public List<WriteMCCommsTask> getNextWriteTasks() {
-        return null; //TODO
+        return this.writeTaskManager.getNextReadTasks();
     }
 }
