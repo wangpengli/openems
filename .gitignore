@@ -12,7 +12,7 @@
 /node_modules
 /bower_components
 
-# IntelliJ IDEA files and metadata
+# IDEs and editors
 /.idea
 *.iml
 *.eml
@@ -87,7 +87,7 @@ local.properties
 
 ### Eclipse Patch ###
 # Eclipse Core
-#.project
+#.project <-- is this needed on the git repo for eclipse users?
 
 # JDT-specific (Eclipse Java Development Tools)
 #.classpath
