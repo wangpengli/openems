@@ -80,12 +80,12 @@ public interface OpenemsComponent {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	default <T extends Channel<?>> T channel(String channelName) {
-		Channel<?> channel = this._channel(channelName);
+	default <T extends Channel<?>> T channel(String channelId) {
+		Channel<?> channel = this._channel(channelId);
 		// check for null
 		if (channel == null) {
 			throw new IllegalArgumentException(
-					"Channel [" + channelName + "] is not defined for ID [" + this.id() + "].");
+					"Channel [" + channelId + "] is not defined for ID [" + this.id() + "].");
 		}
 		// check correct type
 		T typedChannel;
@@ -93,7 +93,7 @@ public interface OpenemsComponent {
 			typedChannel = (T) channel;
 		} catch (ClassCastException e) {
 			throw new IllegalArgumentException(
-					"Channel [" + this.id() + "/" + channelName + "] is not of expected type.");
+					"Channel [" + this.id() + "/" + channelId + "] is not of expected type.");
 		}
 		return typedChannel;
 	}
