@@ -36,13 +36,13 @@ public abstract class MCCommsElement<T> {
         return this;
     }
 
-    public ByteBuffer _getRawValue() {
+    public ByteBuffer getByteBuffer() {
         return ByteBuffer.wrap(rawValue.clone());
     }
 
     public abstract T getValue();
 
-    public abstract void _setRawValue(ByteBuffer buffer);
+    public abstract void setByteBuffer(ByteBuffer buffer);
 
     public abstract void setValue(T value);
 
@@ -62,8 +62,12 @@ public abstract class MCCommsElement<T> {
         this.mcCommsTask = mcCommsTask;
     }
 
-    public abstract OpenemsType getType();
+    public OpenemsType getType() {
+        return this.type;
+    }
 
-    public abstract void _setNextWriteValue(Optional<T> valueOpt) throws OpenemsException;
+    public void setNextWriteValue(Optional<T> valueOpt) throws OpenemsException {
+        valueOpt.ifPresent(this::setValue);
+    }
 
 }
