@@ -8,11 +8,12 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MCCommsPacketBuffer {
 
     //serial port
-    private SerialPort serialPort;
+    private AtomicReference<SerialPort> serialPortAtomicRef = new AtomicReference<>();
     //concurrent queues for threads
     private final LinkedBlockingDeque<TimedByte>
             timedByteQueue = new LinkedBlockingDeque<>();
@@ -25,25 +26,27 @@ public class MCCommsPacketBuffer {
     //thread executor
     private final Executor executor = Executors.newFixedThreadPool(3);
     //utility objects for byte/packet handling
-    private PacketBuilder packetBuilder;
-    private SerialByteHandler serialByteHandler;
-    private PacketPicker packetPicker;
+    private final PacketBuilder packetBuilder = new PacketBuilder(timedByteQueue, this.RXPacketQueue);
+    private final SerialByteHandler serialByteHandler;
+    private final PacketPicker packetPicker = new PacketPicker();
 
-    public void start(String serialPortDescriptor) {
-        //serial port
-        this.serialPort = SerialPort.getCommPort(serialPortDescriptor);
-        this.serialPort.setComPortParameters(9600, 8, 0, SerialPort.NO_PARITY);
-        this.serialPort.setFlowControl(SerialPort.FLOW_CONTROL_DISABLED);
-        this.serialPort.setComPortTimeouts(SerialPort.TIMEOUT_NONBLOCKING, 0, 0);
-        this.serialPort.openPort();
+    public MCCommsPacketBuffer(String serialPortDescriptor) {
+        this.serialPortAtomicRef.set(SerialPort.getCommPort(serialPortDescriptor));
+        this.serialPortAtomicRef.get().setComPortParameters(9600, 8, 0, SerialPort.NO_PARITY);
+        this.serialPortAtomicRef.get().setFlowControl(SerialPort.FLOW_CONTROL_DISABLED);
+        this.serialPortAtomicRef.get().setComPortTimeouts(SerialPort.TIMEOUT_NONBLOCKING, 0, 0);
+        this.serialByteHandler = new SerialByteHandler(this.serialPortAtomicRef, timedByteQueue);
+    }
+
+    public void start() {
+        //open serial port
+        this.serialPortAtomicRef.get().openPort();
+        //execution
         //byte reader
-        this.serialByteHandler = new SerialByteHandler(serialPort.getInputStream(), serialPort.getOutputStream(), timedByteQueue);
         this.executor.execute(serialByteHandler);
         //packet builder
-        this.packetBuilder = new PacketBuilder(timedByteQueue, this.RXPacketQueue);
         this.executor.execute(packetBuilder);
         //packet picker
-        this.packetPicker = new PacketPicker();
         this.executor.execute(packetPicker);
     }
 
@@ -51,7 +54,7 @@ public class MCCommsPacketBuffer {
         this.serialByteHandler.stop();
         this.packetBuilder.stop();
         this.packetPicker.stop();
-        this.serialPort.closePort();
+        this.serialPortAtomicRef.get().closePort();
     }
 
     void registerTransferQueue(int sourceAddress, LinkedTransferQueue<MCCommsPacket> transferQueue) {
@@ -65,17 +68,23 @@ public class MCCommsPacketBuffer {
     private class PacketPicker extends Thread {
         public void run() {
             while (true) {
-                try {
-                    for (Map.Entry<Long, MCCommsPacket> entry : RXPacketQueue.entrySet()) {
-                        MCCommsPacket entryPacket = entry.getValue();
-                        TransferQueue<MCCommsPacket> correspondingQueue = transferQueues.get(entryPacket.sourceAddress);
-                        if (correspondingQueue != null) {
-                            //timeout on trying to give packets to tasks to prevent packet queue from filling up too fast
+                for (Map.Entry<Long, MCCommsPacket> entry : RXPacketQueue.entrySet()) {
+                    MCCommsPacket entryPacket = entry.getValue();
+                    TransferQueue<MCCommsPacket> correspondingQueue = transferQueues.get(entryPacket.sourceAddress);
+                    if (correspondingQueue != null) {
+                        //timeout on trying to give packets to tasks to prevent packet queue from filling up too fast
+                        try {
                             correspondingQueue.tryTransfer(entryPacket, 5, TimeUnit.MILLISECONDS);
+                        } catch (InterruptedException ignored) {
+                            correspondingQueue.tryTransfer(entryPacket); //immediately retry
                         }
                     }
-                    packetBuilder.wait(); //waits on packet builder to actually produce packets
-                } catch (InterruptedException ignored) {
+                }
+                try {
+                    synchronized (packetBuilder) {
+                        packetBuilder.wait(); //waits on packet builder to actually produce packets
+                    }
+                } catch (InterruptedException e) {
                     packetBuilder.resume();
                 }
             }
@@ -167,21 +176,29 @@ public class MCCommsPacketBuffer {
 
     private class SerialByteHandler extends Thread {
 
+        private final AtomicReference<SerialPort> serialPortAtomicRef;
         private InputStream inputStream;
         private OutputStream outputStream;
         private LinkedBlockingDeque<TimedByte> timedByteQueue;
 
-        SerialByteHandler(InputStream inputStream, OutputStream outputStream, LinkedBlockingDeque<TimedByte> timedByteQueue) {
-            this.inputStream = inputStream;
-            this.outputStream = outputStream;
+        SerialByteHandler(AtomicReference<SerialPort> serialPortAtomicRef, LinkedBlockingDeque<TimedByte> timedByteQueue) {
+            this.serialPortAtomicRef = serialPortAtomicRef;
             this.timedByteQueue = timedByteQueue;
         }
 
         @Override
         public void run() {
             while (true) {
+                if (this.inputStream == null) {
+                    this.inputStream = this.serialPortAtomicRef.get().getInputStream();
+                    continue;
+                }
+                if (this.outputStream == null) {
+                    this.outputStream = this.serialPortAtomicRef.get().getOutputStream();
+                    continue;
+                }
                 try {
-                    while (inputStream.available() > 0) {
+                    while (this.serialPortAtomicRef.get().isOpen() && inputStream.available() > 0) {
                         timedByteQueue.add(new TimedByte(System.nanoTime(), (byte) inputStream.read()));
                     }
                 } catch (IOException ignored) {

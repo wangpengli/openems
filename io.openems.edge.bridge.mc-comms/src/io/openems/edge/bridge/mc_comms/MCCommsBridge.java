@@ -13,7 +13,6 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,7 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements OpenemsCo
 	private final Logger logger = LoggerFactory.getLogger(MCCommsBridge.class);
 	private MCCommsWorker worker = new MCCommsWorker(this.protocols);
 	private int masterAddress;
-	private MCCommsPacketBuffer IOPacketBuffer = new MCCommsPacketBuffer();
+	private MCCommsPacketBuffer IOPacketBuffer;
 
 
 	public MCCommsBridge() {
@@ -81,7 +80,8 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements OpenemsCo
 	protected void activate(ComponentContext context, Config config) {
 		super.activate(context, config.service_pid(), config.id(), config.enabled());
 		this.masterAddress = config.masterAddress();
-		this.getIOPacketBuffer().start(config.portName());
+		this.IOPacketBuffer = new MCCommsPacketBuffer(config.portName());
+		this.IOPacketBuffer.start();
 		if (this.isEnabled()) {
 			this.worker.activate(config.id());
 		}
