@@ -1,17 +1,15 @@
 package io.openems.edge.bridge.modbus.api.element;
 
-import java.nio.ByteBuffer;
-import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.ghgande.j2mod.modbus.procimg.InputRegister;
 import com.ghgande.j2mod.modbus.procimg.Register;
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
-
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.types.OpenemsType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
+import java.util.Optional;
 
 public abstract class AbstractDoubleWordElement<T> extends AbstractModbusRegisterElement<T> {
 
