@@ -3,11 +3,12 @@ Bundle-Vendor: Microcare (Destrier Electronics Pty Ltd)
 Bundle-License: Proprietary
 Bundle-Version: 1.0.0.${tstamp}
 
-Export-Package:  \
+Export-Package: \
 	io.openems.edge.bridge.mc_comms.api;-provide=true,\
-    io.openems.edge.bridge.mc_comms.api.mccommstask,\
-    io.openems.edge.bridge.mc_comms.api.element,\
-    io.openems.edge.bridge.mc_comms
+	io.openems.edge.bridge.mc_comms,\
+	io.openems.edge.bridge.mc_comms.util,\
+	io.openems.edge.bridge.mc_comms.api.task,\
+	io.openems.edge.bridge.mc_comms.api.element
 
 Private-Package:  \
 	io.openems.edge.bridge.mc_comms
