@@ -14,6 +14,7 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public abstract class AbstractMCCommsComponent extends AbstractOpenemsComponent 
     private AtomicReference<MCCommsBridge> bridge;
     private LinkedTransferQueue<MCCommsPacket> transferQueue = new LinkedTransferQueue<>();
     private MCCommsProtocol protocol;
+    private ArrayList<MCCommsPacket> awaitingPackets = new ArrayList<>();
 
     @Override
     protected void activate(ComponentContext context, String service_pid, String id, boolean enabled) {
@@ -51,6 +53,29 @@ public abstract class AbstractMCCommsComponent extends AbstractOpenemsComponent 
 
     public LinkedTransferQueue<MCCommsPacket> getTransferQueue() {
         return transferQueue;
+    }
+
+    public MCCommsPacket getNextPacket() {
+        transferQueue.drainTo(awaitingPackets);
+        int i = awaitingPackets.size() - 1;
+        if (i > 0) {
+            MCCommsPacket returnPacket = awaitingPackets.get(i);
+            awaitingPackets.remove(i);
+            return returnPacket;
+        } else {
+            return null;
+        }
+    }
+
+    public MCCommsPacket getPacket(int expectedReplyCommand) {
+        transferQueue.drainTo(awaitingPackets);
+        for (MCCommsPacket currPacket : awaitingPackets) {
+            if (currPacket.command == expectedReplyCommand) {
+                return currPacket;
+            }
+        }
+
+        return null;
     }
 
     public AtomicReference<MCCommsBridge> getMCCommsBridgeAtomicRef() {
