@@ -11,15 +11,15 @@
 
 	<repositories>
 		<repository>
-			<id>maven-restlet-old</id>
-			<name>Public online Restlet repository</name>
-			<url>http://maven.restlet.com</url>
-		</repository>
-		<repository>
 			<id>maven-restlet</id>
-			<name>Alternate restlet repo</name>
-			<url>http://repo.spring.io/plugins-release/org/restlet/jse/org.restlet/2.4.0/</url>
+			<name>Public online Restlet repository</name>
+			<url>http://maven.restlet.org</url>
 		</repository>
+		<!--<repository>-->
+			<!--<id>maven-restlet</id>-->
+			<!--<name>Alternate restlet repo</name>-->
+			<!--<url>http://repo.spring.io/plugins-release/org/restlet/jse/org.restlet/2.4.0/</url>-->
+		<!--</repository>-->
 	</repositories>
 
 	<dependencies>

@@ -33,10 +33,10 @@ public class ReadMCCommsTask extends AbstractMCCommsTask implements ManagedTask 
         MCCommsBridge bridge = parentComponent.getMCCommsBridgeAtomicRef().get();
         int slaveAddress = parentComponent.getSlaveAddress();
         bridge.getIOPacketBuffer().getTXPacketQueue().add(new MCCommsPacket(0, bridge.getMasterAddress(), slaveAddress));
-        MCCommsPacket commandReplyPacket = parentComponent.getTransferQueue().poll();
-        if (commandReplyPacket != null && commandReplyPacket.getCommand() == this.expectedReplyCommand) {
+        MCCommsPacket commandReplyPacket = parentComponent.getPacket(expectedReplyCommand);
+        if (commandReplyPacket != null) {
             //retrieve payload
-            byte[] payload = commandReplyPacket.getPayload();
+            int[] payload = commandReplyPacket.getPayload();
             //assign payload bytes to elements
             for (MCCommsElement<?> element : this.elements) {
                 int byteAddress, numBytes;
@@ -44,7 +44,7 @@ public class ReadMCCommsTask extends AbstractMCCommsTask implements ManagedTask 
                 numBytes = element.getNumBytes();
                 ByteBuffer elementBuffer = ByteBuffer.allocate(numBytes);
                 for (int i = byteAddress; i < (byteAddress + numBytes); i++) {
-                    elementBuffer.order(ByteOrder.BIG_ENDIAN).put(payload[i]);
+                    elementBuffer.order(ByteOrder.BIG_ENDIAN).put((byte) payload[i]); //fixme byte conversion error
                 }
                 element.setByteBuffer(elementBuffer);
             }

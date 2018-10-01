@@ -15,7 +15,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     boolean enabled() default true;
 
     @AttributeDefinition(name = "Port-Name", description = "The name of the serial port - e.g. '/dev/ttyUSB0' or 'COM3'")
-    String portName() default "/dev/ttyUSB0";
+    String portName() default "/dev/pts/3";
 
     @AttributeDefinition(name = "Master-Address", description = "Desired address of the MC-Comms master")
     int masterAddress() default 1;
