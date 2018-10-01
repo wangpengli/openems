@@ -14,7 +14,10 @@ public class Integer16BitElement extends MCCommsElement<Integer> {
 
     @Override
     public Integer getValue() {
-        return ByteBuffer.wrap(this.rawValue).order(ByteOrder.BIG_ENDIAN).getInt();
+        ByteBuffer returnBuffer = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN);
+        returnBuffer.position(3);
+        returnBuffer.put(this.rawValue);
+        return returnBuffer.getInt();
     }
 
     @Override
@@ -24,7 +27,9 @@ public class Integer16BitElement extends MCCommsElement<Integer> {
 
     @Override
     public void setValue(Integer value) {
-        this.rawValue = ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putInt(value).array();
+        byte[] copyVal = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(value).array();
+        this.rawValue[0] = copyVal[2];
+        this.rawValue[1] = copyVal[3];
     }
 
     @Override

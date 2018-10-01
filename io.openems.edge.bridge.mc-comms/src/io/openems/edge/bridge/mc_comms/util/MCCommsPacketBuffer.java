@@ -109,8 +109,8 @@ public class MCCommsPacketBuffer {
 
         @Override
         public void run() {
-            ByteBuffer packetBuffer = ByteBuffer.allocate(25);
-            byte currentByte;
+            IntBuffer packetBuffer = IntBuffer.allocate(25);
+            int currentByte;
             long currentByteTime;
             long previousByteTime;
             long packetStartTime;
@@ -195,35 +195,41 @@ public class MCCommsPacketBuffer {
 
         @Override
         public void run() {
-            while (true) {
-                if (this.inputStream == null) {
-                    this.inputStream = this.serialPortAtomicRef.get().getInputStream();
-                    continue;
-                }
-                if (this.outputStream == null) {
-                    this.outputStream = this.serialPortAtomicRef.get().getOutputStream();
-                    continue;
-                }
-                try {
-                    while (this.serialPortAtomicRef.get().isOpen() && inputStream.available() > 0) {
-                        timedByteQueue.add(new TimedByte(System.nanoTime(), (byte) inputStream.read()));
+            while (true) { //forever
+                //if the port is open
+                if (this.serialPortAtomicRef.get().openPort()) {
+                    //populate input/output streams
+                    if (this.inputStream == null) {
+                        this.inputStream = this.serialPortAtomicRef.get().getInputStream();
+                        continue;
                     }
-                } catch (IOException ignored) {
-                    resume(); //ignore exceptions and keep running
-                }
-                if (!getTXPacketQueue().isEmpty())
-                    getTXPacketQueue().forEach(packet -> {
-                        try {
-                            outputStream.write(packet.getPacketBuffer().array());
-                            outputStream.flush();
-                        } catch (IOException e) {
-                            resume(); //TODO log write errors
+                    if (this.outputStream == null) {
+                        this.outputStream = this.serialPortAtomicRef.get().getOutputStream();
+                        continue;
+                    }
+                    //if bytes are available to be read
+                    try {
+                        while (this.serialPortAtomicRef.get().isOpen() && inputStream.available() > 0) {
+                            timedByteQueue.add(new TimedByte(System.nanoTime(), inputStream.read()));
                         }
-                    });
-                try {
-                    sleep(1); //prevent maxing out the CPU on serial IO reads - TODO check system resource usage, may be heavy on small systems
-                } catch (InterruptedException ignored) {
-                    resume();
+                    } catch (IOException ignored) {
+                        resume(); //ignore exceptions and keep running
+                    }
+                    //if bytes are waiting to be written
+                    if (!getTXPacketQueue().isEmpty())
+                        getTXPacketQueue().forEach(packet -> {
+                            try {
+                                outputStream.write(packet.getPacketBuffer().array());
+                                outputStream.flush();
+                            } catch (IOException e) {
+                                resume(); //TODO log write errors
+                            }
+                        });
+                    try {
+                        sleep(1); //prevent maxing out the CPU on serial IO reads - TODO check system resource usage, may be heavy on small systems
+                    } catch (InterruptedException ignored) {
+                        resume();
+                    }
                 }
             }
         }
@@ -232,9 +238,9 @@ public class MCCommsPacketBuffer {
     private class TimedByte{
 
         private final long time;
-        private final byte value;
+        private final int value;
 
-        TimedByte(long time, byte value) {
+        TimedByte(long time, int value) {
             this.time = time;
             this.value = value;
         }
@@ -243,7 +249,7 @@ public class MCCommsPacketBuffer {
             return time;
         }
 
-        byte getValue() {
+        int getValue() {
             return value;
         }
     }

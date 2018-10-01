@@ -4,6 +4,7 @@ import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.types.OpenemsType;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Optional;
 
 public class Integer8BitElement extends Abstract8BitElement<Integer> {
@@ -13,12 +14,12 @@ public class Integer8BitElement extends Abstract8BitElement<Integer> {
 
     @Override
     public Integer getValue() {
-        return (int) this.rawValue[0];
+        return ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).put(3, this.rawValue[0]).getInt(0);
     }
 
     @Override
     public void setValue(Integer value) {
-        this.rawValue = ByteBuffer.allocate(1).putInt(value).array();
+        this.rawValue[0] = ByteBuffer.allocate(4).putInt(value).array()[0];
     }
 
     @Override

@@ -2,74 +2,67 @@ package io.openems.edge.bridge.mc_comms.util;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 
 public class MCCommsPacket {
     protected int sourceAddress;
     protected int destinationAddress;
     protected int command;
-    protected byte[] payload;
-    private ByteBuffer packetBuffer = ByteBuffer.allocate(25);
+    protected int[] payload = new int[15];
+    private IntBuffer packetBuffer = IntBuffer.allocate(25);
 
-    public MCCommsPacket(byte[] packet) throws MCCommsException {
-        this.payload = new byte[15];
+    public MCCommsPacket(int[] packetBuffer) throws MCCommsException {
         //packet length
-        if (packet.length > 25) {
-            throw new MCCommsException("MCComms packet too long! packet byte count: " + packet.length);
+        if (packetBuffer.length > 25) {
+            throw new MCCommsException("MCComms packet too long! packet byte count: " + packetBuffer.length);
         }
-        if (packet.length < 25) {
-            throw new MCCommsException("MCComms packet too short! packet byte count: " + packet.length);
+        if (packetBuffer.length < 25) {
+            throw new MCCommsException("MCComms packet too short! packet byte count: " + packetBuffer.length);
         }
 
         //break down packet
 
         //start character
-        ByteBuffer startCharByte = ByteBuffer.allocate(1);
-        startCharByte.put(packet[0]);
-        char startChar = startCharByte.getChar();
-        if (startChar != 'S') {
-            throw new MCCommsException("Invalid start character; expecting 'S' but got: '" + startChar + "' [" + startCharByte.toString() + "]");
+        if (packetBuffer[0] != 83) {
+            throw new MCCommsException("Invalid start character; expecting 83 but got: '" + packetBuffer[0]);
         }
 
         //end character
-        ByteBuffer endCharByte = ByteBuffer.allocate(1);
-        endCharByte.put(packet[24]);
-        char endChar = startCharByte.getChar();
-        if (endChar != 'E') {
-            throw new MCCommsException("Invalid end character; expecting 'E' but got: '" + endChar + "' [" + endCharByte.toString() + "]");
+        if (packetBuffer[24] != 69) {
+            throw new MCCommsException("Invalid end character; expecting 69 but got: '" + packetBuffer[24]);
         }
 
         //CRC
         int actualCRC = 0;
-        for (int i = 1; i < 21; i ++) {
-            actualCRC += (int) packet[i];
+        for (int i = 0; i < 22; i ++) {
+            actualCRC += packetBuffer[i];
         }
-        ByteBuffer CRCBytes = ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN);
-        CRCBytes.put(packet[3]);
-        CRCBytes.put(packet[4]);
+        ByteBuffer CRCBytes = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN);
+
+        CRCBytes.put(2, (byte) packetBuffer[22]);
+        CRCBytes.put(3, (byte) packetBuffer[23]);
         int packetCRC = CRCBytes.getInt();
         if (packetCRC != actualCRC) {
             throw new MCCommsException("CRC error! expected CRC value " + packetCRC + " but calculated CRC value " + actualCRC);
         }
 
         //command
-        ByteBuffer commandByte = ByteBuffer.allocate(1);
-        commandByte.put(packet[5]);
-        this.command = commandByte.getInt();
+        this.command = packetBuffer[5];
 
         //slave address
-        ByteBuffer sourceAddressBytes = ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN);
-        sourceAddressBytes.put(packet[3]);
-        sourceAddressBytes.put(packet[4]);
+        ByteBuffer sourceAddressBytes = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN);
+        sourceAddressBytes.put(2, (byte) packetBuffer[3]);
+        sourceAddressBytes.put(3, (byte) packetBuffer[4]);
         this.sourceAddress = sourceAddressBytes.getInt();
 
         //master address
-        ByteBuffer destinationAddressBytes = ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN);
-        destinationAddressBytes.put(packet[3]);
-        destinationAddressBytes.put(packet[4]);
+        ByteBuffer destinationAddressBytes = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN);
+        destinationAddressBytes.put(2, (byte) packetBuffer[1]);
+        destinationAddressBytes.put(3, (byte) packetBuffer[2]);
         this.destinationAddress = destinationAddressBytes.getInt();
 
         //payload
-        System.arraycopy(packet, 7, this.payload, 0, 15); // only copy the payload
+        System.arraycopy(packetBuffer, 7, this.payload, 0, 15); // only copy the payload
     }
 
 
@@ -79,7 +72,9 @@ public class MCCommsPacket {
         this.command = command;
         this.sourceAddress = sourceAddress;
         this.destinationAddress = destinationAddress;
-        this.payload = payload;
+        for (int i = 0; i <= 15; i++) {
+            this.payload[i] = payload[i];
+        }
         this.createPacketBuffer();
     }
 
@@ -87,8 +82,8 @@ public class MCCommsPacket {
         this.command = command;
         this.sourceAddress = sourceAddress;
         this.destinationAddress = destinationAddress;
-        for (int i = 0; i < 15; i++) {
-            this.payload[i] = (byte) 0xAA;
+        for (int i = 0; i <= 15; i++) {
+            this.payload[i] = 0xAA;
         }
         this.createPacketBuffer();
     }
@@ -108,24 +103,46 @@ public class MCCommsPacket {
 
     protected void createPacketBuffer() {
         this.packetBuffer.put((byte) 83); //S start byte
-        this.packetBuffer.put(ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putInt(this.destinationAddress).array()); //destination address
-        this.packetBuffer.put(ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putInt(this.sourceAddress).array()); //source address
+        this.packetBuffer.put(this.destinationAddress);
+        this.packetBuffer.put(this.sourceAddress);
         this.packetBuffer.put((byte) this.command); //
         this.packetBuffer.put(this.payload);
         int CRC = 0;
-        for (int i = 1; i < 21; i++) {
-            CRC += (int) this.packetBuffer.get(i);
+        for (int i = 1; i <= 19; i++) {
+            CRC += this.packetBuffer.get(i);
         }
-        this.packetBuffer.position(22);
-        this.packetBuffer.put(ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putInt(CRC).array());
-        this.packetBuffer.put((byte) 69); //E end byte
+        this.packetBuffer.position(20);
+        this.packetBuffer.put(CRC);
+        this.packetBuffer.put(69); //E end byte
     }
 
     ByteBuffer getPacketBuffer() {
-        return packetBuffer;
+        ByteBuffer packetByteBuffer = ByteBuffer.allocate(25);
+        //start char
+        packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(0)).array()[3]);
+        //destination
+        packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(1)).array()[2]);
+        packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(1)).array()[3]);
+        //source
+        packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(2)).array()[2]);
+        packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(2)).array()[3]);
+        //command
+        packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(3)).array()[3]);
+        //packet length
+        packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(4)).array()[3]);
+        //payload
+        for (int i = 5; i < 19; i++) {
+            packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(i)).array()[3]);
+        }
+        //crc
+        packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(20)).array()[2]);
+        packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(20)).array()[3]);
+        //end char
+        packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(21)).array()[3]);
+        return packetByteBuffer;
     }
 
-    public byte[] getPayload() {
+    public int[] getPayload() {
         return payload;
     }
 }

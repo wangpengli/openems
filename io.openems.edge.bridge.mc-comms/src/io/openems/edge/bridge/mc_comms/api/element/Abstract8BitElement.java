@@ -12,6 +12,6 @@ public abstract class Abstract8BitElement<T> extends MCCommsElement<T>{
 
     @Override
     public void setByteBuffer(ByteBuffer buffer) {
-        this.rawValue[0] = buffer.array()[0];
+        this.rawValue[0] = buffer.get(buffer.capacity() - 1 );
     }
 }
