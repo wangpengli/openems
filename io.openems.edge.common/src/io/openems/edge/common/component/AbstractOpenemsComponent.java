@@ -60,8 +60,6 @@ public abstract class AbstractOpenemsComponent implements OpenemsComponent {
 
 	/**
 	 * Handles @Deactivate of implementations. Prints log output.
-	 * 
-	 * @param id
 	 */
 	protected void deactivate() {
 		this.logMessage("Deactivate");
