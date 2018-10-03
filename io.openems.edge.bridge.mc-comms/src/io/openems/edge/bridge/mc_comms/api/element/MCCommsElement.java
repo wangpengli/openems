@@ -20,6 +20,7 @@ public abstract class MCCommsElement<T> {
     private final List<Consumer<T>> onUpdateCallbacks = new CopyOnWriteArrayList<>();
 
     public MCCommsElement(int byteAddress, int numBytes, OpenemsType type) {
+        this.rawValue = new byte[numBytes];
         this.byteAddress = byteAddress;
         this.numBytes = numBytes;
         this.type = type;
