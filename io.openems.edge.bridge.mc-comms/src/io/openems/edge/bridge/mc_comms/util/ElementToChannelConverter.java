@@ -10,7 +10,7 @@ public class ElementToChannelConverter<elementType, channelType> {
     /**
      * Converts directly 1-to-1 between Element and Channel
      */
-    public final static ElementToChannelConverter DIRECT_1_TO_1 = new ElementToChannelConverter( //
+    public final static ElementToChannelConverter SCALE_FACTOR_0 = new ElementToChannelConverter( //
             // element -> channel
             value -> value, //
             // channel -> element

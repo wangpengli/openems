@@ -169,9 +169,9 @@ public abstract class AbstractMCCommsComponent extends AbstractOpenemsComponent 
          * @param element
          * @return the element parameter
          */
-        protected final MCCommsElement<?> m(ChannelId channelId, MCCommsElement<?> element) {
+        protected final MCCommsElement<?> m(io.openems.edge.common.channel.doc.ChannelId channelId, MCCommsElement<?> element) {
             return new ChannelMapper(element) //
-                    .m(channelId, ElementToChannelConverter.DIRECT_1_TO_1) //
+                    .m(channelId, ElementToChannelConverter.SCALE_FACTOR_0) //
                     .build();
         }
 
@@ -183,7 +183,7 @@ public abstract class AbstractMCCommsComponent extends AbstractOpenemsComponent 
          * @param element
          * @return the element parameter
          */
-        protected final MCCommsElement<?> m(ChannelId channelId, MCCommsElement<?> element, ElementToChannelConverter converter) {
+        protected final MCCommsElement<?> m(io.openems.edge.common.channel.doc.ChannelId channelId, MCCommsElement<?> element, ElementToChannelConverter converter) {
             return new ChannelMapper(element) //
                     .m(channelId, converter) //
                     .build();
