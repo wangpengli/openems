@@ -9,29 +9,30 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.IntBuffer;
 import java.time.Duration;
-import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MCCommsPacketBuffer {
 
-    //serial port
-    private AtomicReference<SerialPort> serialPortAtomicRef = new AtomicReference<>();
+    //serial port atomic reference
+    private AtomicReference<SerialPort>
+            serialPortAtomicRef = new AtomicReference<>();
     //concurrent queues for threads
     private final LinkedBlockingDeque<TimedByte>
             timedByteQueue = new LinkedBlockingDeque<>();
-    private final Cache<Long, MCCommsPacket>
-            RXPacketCache = CacheBuilder.newBuilder()
-                .expireAfterWrite(Duration.ofMillis(500))
-                .maximumSize(1000)
-                .build();
     private final ConcurrentLinkedDeque<MCCommsPacket>
             TXPacketQueue = new ConcurrentLinkedDeque<>();
     private final ConcurrentHashMap<Integer, LinkedTransferQueue<MCCommsPacket>>
             transferQueues = new ConcurrentHashMap<>();
+    //temporal cache for incoming serial packets
+    private final Cache<Long, MCCommsPacket>
+            RXPacketCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(Duration.ofMillis(500))
+            .maximumSize(1000)
+            .build();
     //thread executor
     private final Executor executor = Executors.newFixedThreadPool(3);
-    //utility objects for byte/packet handling
+    //utility threads for byte/packet handling/picking
     private final PacketBuilder packetBuilder = new PacketBuilder(timedByteQueue, this.RXPacketCache);
     private final SerialByteHandler serialByteHandler;
     private final PacketPicker packetPicker = new PacketPicker();
@@ -74,25 +75,25 @@ public class MCCommsPacketBuffer {
     private class PacketPicker extends Thread {
         public void run() {
             while (true) {
+                //clean up cache first to prevent CPU cycles being used on old packets
+                RXPacketCache.cleanUp();
                 //iterate through queued packets and try assign them to component transfer queues
-                for (Map.Entry<Long, MCCommsPacket> entry : RXPacketCache.asMap().entrySet()) {
-                    MCCommsPacket entryPacket = entry.getValue();
-                    TransferQueue<MCCommsPacket> correspondingQueue = transferQueues.get(entryPacket.sourceAddress);
-                    //if a corresponding queue exists...
-                    if (correspondingQueue != null) {
-                        //...try transfer to that queue
-                        if (correspondingQueue.tryTransfer(entryPacket)) //if transferred...
-                            RXPacketCache.invalidate(entry.getKey()); //...remove packet from cache
+                RXPacketCache.asMap().forEach((packetNanoTime, packet) -> {
+                    TransferQueue<MCCommsPacket> correspondingQueue = transferQueues.get(packet.sourceAddress);
+                    //if a corresponding queue exists (bitwise and) transfer to queue is successful...
+                    if (correspondingQueue != null && correspondingQueue.tryTransfer(packet)) {
+                        //...remove packet from cache
+                        RXPacketCache.invalidate(packetNanoTime);
                     }
-                }
+                });
                 try {
                     synchronized (packetBuilder) {
                         packetBuilder.wait(); //waits on packet builder to actually produce packets
                     }
-                } catch (InterruptedException e) {
+                } catch (InterruptedException ignored) {
                     packetBuilder.resume(); //resume packet builder if interrupted for some reason
                 }
-                RXPacketCache.cleanUp(); //clean up cache
+
             }
         }
     }
@@ -119,12 +120,13 @@ public class MCCommsPacketBuffer {
 
             //forever loop
             while (true) {
-                //blocking deque will block until a value is present in the deque PERFORMANCE GAINZ!!1!
+                //blocking deque will block until a value is present in the deque
                 try {
                     polledTimedByte = timedByteQueue.takeFirst();
                 } catch (InterruptedException e) {
                     continue;
                 }
+                //assign received byte to holder variables
                 currentByte = polledTimedByte.getValue();
                 currentByteTime = polledTimedByte.getTime();
                 boolean endByteReceived = false;
@@ -152,6 +154,7 @@ public class MCCommsPacketBuffer {
                             // ...and time out polling operation if window closes
                             polledTimedByte = timedByteQueue.pollFirst(remainingPacketWindowPeriod, TimeUnit.NANOSECONDS);
                         } catch (InterruptedException ignored) {
+                            polledTimedByte = null;
                             continue;
                         }
                         if (polledTimedByte != null) {
