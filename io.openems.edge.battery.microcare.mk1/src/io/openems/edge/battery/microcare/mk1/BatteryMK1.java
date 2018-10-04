@@ -59,7 +59,7 @@ public class BatteryMK1 extends AbstractMCCommsComponent implements Battery, Ope
 	@Override
 	protected MCCommsProtocol defineMCCommsProtocol() {
 		return new MCCommsProtocol(new AtomicReference<>(this),
-				new ReadMCCommsTask(READ_COMMAND_1, EXPECTED_REPLY_1, Priority.HIGH,
+				new ReadMCCommsTask(READ_COMMAND_1, EXPECTED_REPLY_1, Priority.HIGH, 20000,
 						m(Battery.ChannelId.BATTERY_TEMP, new SignedInt8BitElement(0), ElementToChannelConverter.SCALE_FACTOR_0),
 						m(Battery.ChannelId.CAPACITY_KWH, new Integer32BitElement(1), ElementToChannelConverter.SCALE_FACTOR_0),
 						m(Battery.ChannelId.READY_FOR_WORKING, new BooleanElement(5)),
@@ -67,20 +67,22 @@ public class BatteryMK1 extends AbstractMCCommsComponent implements Battery, Ope
 						m(Battery.ChannelId.SOH, new Integer8BitElement(7), ElementToChannelConverter.SCALE_FACTOR_0),
 						m(ChannelId.AVERAGE_CURRENT, new Integer16BitElement(8), ElementToChannelConverter.SCALE_FACTOR_1),
 						m(ChannelId.AVERAGE_VOLTAGE, new Integer16BitElement(10), ElementToChannelConverter.SCALE_FACTOR_1)
-				),
-				new ReadMCCommsTask(READ_COMMAND_1, EXPECTED_REPLY_1, Priority.LOW,
-						m(Battery.ChannelId.CHARGE_MAX_CURRENT, new Integer16BitElement(0), ElementToChannelConverter.SCALE_FACTOR_1),
-						m(Battery.ChannelId.CHARGE_MAX_VOLTAGE, new Integer16BitElement(2), ElementToChannelConverter.SCALE_FACTOR_1),
-						m(Battery.ChannelId.DISCHARGE_MAX_CURRENT, new Integer16BitElement(4), ElementToChannelConverter.SCALE_FACTOR_1),
-						m(Battery.ChannelId.DISCHARGE_MIN_VOLTAGE, new Integer16BitElement(6), ElementToChannelConverter.SCALE_FACTOR_1),
-						m(Battery.ChannelId.MAX_CAPACITY, new Integer32BitElement(8), ElementToChannelConverter.SCALE_FACTOR_0))
+				)
+//                ,
+//				new ReadMCCommsTask(READ_COMMAND_1, EXPECTED_REPLY_1, Priority.LOW,
+//						m(Battery.ChannelId.CHARGE_MAX_CURRENT, new Integer16BitElement(0), ElementToChannelConverter.SCALE_FACTOR_1),
+//						m(Battery.ChannelId.CHARGE_MAX_VOLTAGE, new Integer16BitElement(2), ElementToChannelConverter.SCALE_FACTOR_1),
+//						m(Battery.ChannelId.DISCHARGE_MAX_CURRENT, new Integer16BitElement(4), ElementToChannelConverter.SCALE_FACTOR_1),
+//						m(Battery.ChannelId.DISCHARGE_MIN_VOLTAGE, new Integer16BitElement(6), ElementToChannelConverter.SCALE_FACTOR_1),
+//						m(Battery.ChannelId.MAX_CAPACITY, new Integer32BitElement(8), ElementToChannelConverter.SCALE_FACTOR_0))
 		);
 	}
 
 	@Activate
 	void activate(ComponentContext context, Config config) {
-		super.activate(context, config.service_pid(), config.id(), config.enabled(), cm, config.slaveAddress(), config.bridgeID());
-		bridgeID = config.bridgeID();
+		super.activate(context, config.service_pid(), config.id(), config.enabled(), cm, config.slaveAddress(), config.MCCommsBridge_id());
+		bridgeID = config.MCCommsBridge_id();
+		Utils.initializeChannels(this).forEach(this::addChannel);
 	}
 
 	@Deactivate

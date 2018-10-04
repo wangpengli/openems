@@ -16,8 +16,11 @@ Private-Package:  \
 
 -includeresource: {readme.md}
 
--buildpath:  \
-	osgi.enroute.base.api;version=2.1
+-buildpath: \
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.battery.api;version=latest,\
+	io.openems.edge.bridge.mc-comms;version=latest,\
+	io.openems.edge.common;version=latest
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \
