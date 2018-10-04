@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.LinkedTransferQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -67,12 +68,20 @@ public abstract class AbstractMCCommsComponent extends AbstractOpenemsComponent 
         }
     }
 
-    public MCCommsPacket getPacket(int expectedReplyCommand) {
+    public MCCommsPacket getPacket(int expectedReplyCommand, int timeOutMilliSeconds) {
         transferQueue.drainTo(awaitingPackets);
         for (MCCommsPacket currPacket : awaitingPackets) {
             if (currPacket.command == expectedReplyCommand) {
                 return currPacket;
             }
+        }
+        try {
+            MCCommsPacket currPacket = transferQueue.poll(timeOutMilliSeconds, TimeUnit.MILLISECONDS);
+            if (currPacket != null && currPacket.command == expectedReplyCommand) {
+                return currPacket;
+            }
+        } catch (InterruptedException e) {
+            return null;
         }
 
         return null;

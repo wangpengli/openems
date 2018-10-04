@@ -15,11 +15,20 @@ import java.nio.ByteOrder;
 public class ReadMCCommsTask extends AbstractMCCommsTask implements ManagedTask {
 
     private final int expectedReplyCommand;
+    private final int readReplyTimeout;
 
     public ReadMCCommsTask(int readCommand, int expectedReplyCommand, Priority priority, MCCommsElement<?>... elements) {
         super(readCommand, priority, elements);
         this.expectedReplyCommand = expectedReplyCommand;
+        readReplyTimeout = 100;
     }
+
+    public ReadMCCommsTask(int readCommand, int expectedReplyCommand, Priority priority, int readReplyTimeout, MCCommsElement<?>... elements) {
+        super(readCommand, priority, elements);
+        this.expectedReplyCommand = expectedReplyCommand;
+        this.readReplyTimeout = readReplyTimeout;
+    }
+
 
     /**
      * Sends a query for this AbstractMCCommsTask to the MCComms device
@@ -32,8 +41,8 @@ public class ReadMCCommsTask extends AbstractMCCommsTask implements ManagedTask 
         AbstractMCCommsComponent parentComponent = protocol.getParentComponentAtomicRef().get();
         MCCommsBridge bridge = parentComponent.getMCCommsBridgeAtomicRef().get();
         int slaveAddress = parentComponent.getSlaveAddress();
-        bridge.getIOPacketBuffer().getTXPacketQueue().add(new MCCommsPacket(0, bridge.getMasterAddress(), slaveAddress));
-        MCCommsPacket commandReplyPacket = parentComponent.getPacket(expectedReplyCommand);
+        bridge.getIOPacketBuffer().getTXPacketQueue().add(new MCCommsPacket(this.command, bridge.getMasterAddress(), slaveAddress));
+        MCCommsPacket commandReplyPacket = parentComponent.getPacket(expectedReplyCommand, readReplyTimeout);
         if (commandReplyPacket != null) {
             //retrieve payload
             int[] payload = commandReplyPacket.getPayload();
@@ -43,8 +52,8 @@ public class ReadMCCommsTask extends AbstractMCCommsTask implements ManagedTask 
                 byteAddress = element.getByteAddress();
                 numBytes = element.getNumBytes();
                 ByteBuffer elementBuffer = ByteBuffer.allocate(numBytes);
-                for (int i = byteAddress; i < (byteAddress + numBytes); i++) {
-                    elementBuffer.order(ByteOrder.BIG_ENDIAN).put((byte) payload[i]); //fixme byte conversion error
+                for (int i = byteAddress; i <= (byteAddress + numBytes); i++) {
+                    elementBuffer.order(ByteOrder.BIG_ENDIAN).put((byte) payload[i]);
                 }
                 element.setByteBuffer(elementBuffer);
             }
