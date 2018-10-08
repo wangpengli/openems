@@ -41,7 +41,7 @@ public class ReadMCCommsTask extends AbstractMCCommsTask implements ManagedTask 
         AbstractMCCommsComponent parentComponent = protocol.getParentComponentAtomicRef().get();
         MCCommsBridge bridge = parentComponent.getMCCommsBridgeAtomicRef().get();
         int slaveAddress = parentComponent.getSlaveAddress();
-        bridge.getIOPacketBuffer().getTXPacketQueue().add(new MCCommsPacket(this.command, bridge.getMasterAddress(), slaveAddress));
+        bridge.getTXPacketQueue().add(new MCCommsPacket(this.command, bridge.getMasterAddress(), slaveAddress));
         MCCommsPacket commandReplyPacket = parentComponent.getPacket(expectedReplyCommand, readReplyTimeout);
         if (commandReplyPacket != null) {
             //retrieve payload

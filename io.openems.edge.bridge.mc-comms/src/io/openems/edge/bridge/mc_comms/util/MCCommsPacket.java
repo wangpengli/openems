@@ -116,7 +116,7 @@ public class MCCommsPacket {
         this.packetBuffer.put(69); //E end byte
     }
 
-    ByteBuffer getPacketBuffer() {
+    public ByteBuffer getPacketBuffer() {
         ByteBuffer packetByteBuffer = ByteBuffer.allocate(25);
         //start char
         packetByteBuffer.put(ByteBuffer.allocate(4).putInt(packetBuffer.get(0)).array()[3]);

@@ -28,7 +28,7 @@ public class WriteMCCommsTask extends AbstractMCCommsTask implements ManagedTask
 
         //sends connection request before writing if ackBeforeWrite == true
         if (ackBeforeWrite) {
-            bridge.getIOPacketBuffer().getTXPacketQueue().add(new MCCommsPacket(0, bridge.getMasterAddress(), slaveAddress));
+            bridge.getTXPacketQueue().add(new MCCommsPacket(0, bridge.getMasterAddress(), slaveAddress));
             MCCommsPacket replyPacket = parentComponent.getPacket(1, 100);
             if (replyPacket == null) {
                 throw new MCCommsException("[MCCOMMS] Could not establish MCComms connection with slave device " + parentComponent.getSlaveAddress());
@@ -37,7 +37,7 @@ public class WriteMCCommsTask extends AbstractMCCommsTask implements ManagedTask
             for (MCCommsElement<?> element : this.elements) {
                 packetBuffer.put(element.getByteBuffer().array(), element.getByteAddress(), element.getNumBytes());
             }
-            bridge.getIOPacketBuffer().getTXPacketQueue().add(new MCCommsPacket(command, bridge.getMasterAddress(), slaveAddress, packetBuffer.array()));
+            bridge.getTXPacketQueue().add(new MCCommsPacket(command, bridge.getMasterAddress(), slaveAddress, packetBuffer.array()));
 
         }
     }
