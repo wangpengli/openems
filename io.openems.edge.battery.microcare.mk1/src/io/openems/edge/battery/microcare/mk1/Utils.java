@@ -1,10 +1,7 @@
 package io.openems.edge.battery.microcare.mk1;
 
 import io.openems.edge.battery.api.Battery;
-import io.openems.edge.common.channel.AbstractReadChannel;
-import io.openems.edge.common.channel.BooleanReadChannel;
-import io.openems.edge.common.channel.IntegerReadChannel;
-import io.openems.edge.common.channel.StateChannel;
+import io.openems.edge.common.channel.*;
 import io.openems.edge.common.component.OpenemsComponent;
 
 import java.util.Arrays;
@@ -16,7 +13,7 @@ public class Utils {
                 Arrays.stream(OpenemsComponent.ChannelId.values()).map(channelId -> {
                     switch (channelId) {
                         case STATE:
-                            return new StateChannel(c, channelId);
+                            return new StateCollectorChannel(c, channelId);
                     }
                     return null;
                 }), Arrays.stream(Battery.ChannelId.values()).map(channelId -> {
