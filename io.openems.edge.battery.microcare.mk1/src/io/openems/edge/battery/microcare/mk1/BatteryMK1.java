@@ -1,7 +1,7 @@
 package io.openems.edge.battery.microcare.mk1;
 
 import io.openems.edge.battery.api.Battery;
-import io.openems.edge.bridge.mc_comms.MCCommsBridge;
+import io.openems.edge.bridge.mc_comms.api.BridgeMCComms;
 import io.openems.edge.bridge.mc_comms.api.element.*;
 import io.openems.edge.bridge.mc_comms.api.task.ReadMCCommsTask;
 import io.openems.edge.bridge.mc_comms.util.AbstractMCCommsComponent;
@@ -35,7 +35,7 @@ public class BatteryMK1 extends AbstractMCCommsComponent implements Battery, Ope
 	protected ConfigurationAdmin cm;
 
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-	protected void setMCCommsBridge(MCCommsBridge bridge) {
+	protected void setMCCommsBridge(BridgeMCComms bridge) {
 		super.setMCCommsBridge(bridge);
 	}
 

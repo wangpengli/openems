@@ -3,7 +3,9 @@ package io.openems.edge.bridge.mc_comms.util;
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.bridge.mc_comms.MCCommsBridge;
+import io.openems.edge.bridge.mc_comms.api.BridgeMCComms;
 import io.openems.edge.bridge.mc_comms.api.element.BooleanCollectiveElement;
+import io.openems.edge.bridge.mc_comms.api.element.BooleanElement;
 import io.openems.edge.bridge.mc_comms.api.element.MCCommsElement;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.WriteChannel;
@@ -26,7 +28,7 @@ import java.util.function.Function;
 public abstract class AbstractMCCommsComponent extends AbstractOpenemsComponent {
 
     private int slaveAddress;
-    private AtomicReference<MCCommsBridge> bridge;
+    private AtomicReference<MCCommsBridge> bridge = new AtomicReference<>();
     private LinkedTransferQueue<MCCommsPacket> transferQueue = new LinkedTransferQueue<>();
     private MCCommsProtocol protocol;
     private ArrayList<MCCommsPacket> awaitingPackets = new ArrayList<>();
@@ -47,9 +49,9 @@ public abstract class AbstractMCCommsComponent extends AbstractOpenemsComponent 
     }
 
 
-    protected void setMCCommsBridge(MCCommsBridge bridge) {
-        bridge.getIOPacketBuffer().registerTransferQueue(this.slaveAddress, this.transferQueue);
-        this.bridge.set(bridge);
+    protected void setMCCommsBridge(BridgeMCComms bridge) {
+        this.bridge.set((MCCommsBridge) bridge);
+        this.bridge.get().registerTransferQueue(this.slaveAddress, this.transferQueue);
     }
 
     public LinkedTransferQueue<MCCommsPacket> getTransferQueue() {
@@ -160,47 +162,71 @@ public abstract class AbstractMCCommsComponent extends AbstractOpenemsComponent 
         }
     }
 
-        /**
-         * Creates a ChannelMapper that can be used with builder pattern inside the
-         * protocol definition.
-         *
-         * @param element
-         * @return
-         */
-        protected final ChannelMapper cm(MCCommsElement<?> element) {
-            return new ChannelMapper(element);
+    /**
+     * Creates a ChannelMapper that can be used with builder pattern inside the
+     * protocol definition.
+     *
+     * @param element
+     * @return
+     */
+    protected final ChannelMapper cm(MCCommsElement<?> element) {
+        return new ChannelMapper(element);
+    }
+
+    /**
+     * Maps the given element 1-to-1 to the Channel identified by channelId.
+     *
+     * @param channelId
+     * @param element
+     * @return the element parameter
+     */
+    protected final MCCommsElement<?> m(io.openems.edge.common.channel.doc.ChannelId channelId, MCCommsElement<?> element) {
+        return new ChannelMapper(element) //
+                .m(channelId, ElementToChannelConverter.SCALE_FACTOR_0) //
+                .build();
+    }
+
+    /**
+     * Maps the given element to the Channel identified by channelId, applying the
+     * given @link{ElementToChannelConverter}
+     *
+     * @param channelId
+     * @param element
+     * @return the element parameter
+     */
+    protected final MCCommsElement<?> m(io.openems.edge.common.channel.doc.ChannelId channelId, MCCommsElement<?> element, ElementToChannelConverter converter) {
+        return new ChannelMapper(element) //
+                .m(channelId, converter) //
+                .build();
+    }
+
+    public class BooleanChannelMapper {
+        private final BooleanElement element;
+        private Channel<?> channel;
+
+        public BooleanChannelMapper(BooleanElement element) {
+            this.element = element;
+            this.element.onUpdateCallback((value) -> channel.setNextValue(element.getValue()));
         }
 
-        /**
-         * Maps the given element 1-to-1 to the Channel identified by channelId.
-         *
-         * @param channelId
-         * @param element
-         * @return the element parameter
-         */
-        protected final MCCommsElement<?> m(io.openems.edge.common.channel.doc.ChannelId channelId, MCCommsElement<?> element) {
-            return new ChannelMapper(element) //
-                    .m(channelId, ElementToChannelConverter.SCALE_FACTOR_0) //
-                    .build();
+        public BooleanChannelMapper m(ChannelId channelId) {
+            this.channel = channel(channelId);
+            if (channel.getType() != OpenemsType.BOOLEAN) {
+                throw new IllegalArgumentException(
+                        "Channel [" + channelId + "] must be of type [BOOLEAN] for bit-mapping.");
+            }
+            return this;
         }
 
-        /**
-         * Maps the given element to the Channel identified by channelId, applying the
-         * given @link{ElementToChannelConverter}
-         *
-         * @param channelId
-         * @param element
-         * @return the element parameter
-         */
-        protected final MCCommsElement<?> m(io.openems.edge.common.channel.doc.ChannelId channelId, MCCommsElement<?> element, ElementToChannelConverter converter) {
-            return new ChannelMapper(element) //
-                    .m(channelId, converter) //
-                    .build();
+        public BooleanElement build() {
+            return this.element;
         }
+
+    }
 
     /**
      * Private subclass to handle Channels that are mapping to one bit of a MCComms
-     * Unsigned Word element
+     * Unsigned 8-bit element
      */
     public class BitChannelMapper {
         private final BooleanCollectiveElement element;
@@ -234,14 +260,26 @@ public abstract class AbstractMCCommsComponent extends AbstractOpenemsComponent 
         }
     }
 
-        /**
-         * Creates a BitChannelMapper that can be used with builder pattern inside the
-         * protocol definition.
-         *
-         * @param element
-         * @return
-         */
-        protected final BitChannelMapper bm(BooleanCollectiveElement element) {
-            return new BitChannelMapper(element);
-        }
+    /**
+     * Creates a BitChannelMapper that can be used with builder pattern inside the
+     * protocol definition.
+     *
+     * @param element
+     * @return
+     */
+    protected final BitChannelMapper bcm(BooleanCollectiveElement element) {
+        return new BitChannelMapper(element);
     }
+
+    /**
+     * Creates a BooleanChannelMapper that can be used with builder pattern inside the
+     * protocol definition.
+     *
+     * @param element
+     * @return
+     */
+    protected final BooleanChannelMapper bm(BooleanElement element) {
+        return new BooleanChannelMapper(element);
+    }
+
+}
