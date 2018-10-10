@@ -4,6 +4,10 @@ import io.openems.common.types.OpenemsType;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Abstract class; parent for all non-abstract 8 bit elements
+ * @param <T>
+ */
 public abstract class Abstract8BitElement<T> extends MCCommsElement<T>{
 
     Abstract8BitElement(int byteAddress, OpenemsType type) {

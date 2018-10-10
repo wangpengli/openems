@@ -12,28 +12,47 @@ import io.openems.edge.common.taskmanager.Priority;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * Task for reading values from and MC Comms slave
+ */
 public class ReadMCCommsTask extends AbstractMCCommsTask implements ManagedTask {
 
     private final int expectedReplyCommand;
-    private final int readReplyTimeout;
+    private final int readReplyTimeoutMs;
 
+    /**
+     * Constructor
+     * @param readCommand Command integer to be sent to the slave device
+     * @param expectedReplyCommand Command integer expected in reply packet
+     * @param priority priority level of this task
+     * @param elements MCCommsElements to be mapped, usually in the form of a ChannelMapper
+     */
     public ReadMCCommsTask(int readCommand, int expectedReplyCommand, Priority priority, MCCommsElement<?>... elements) {
         super(readCommand, priority, elements);
         this.expectedReplyCommand = expectedReplyCommand;
-        readReplyTimeout = 100;
+        readReplyTimeoutMs = 100;
     }
 
-    public ReadMCCommsTask(int readCommand, int expectedReplyCommand, Priority priority, int readReplyTimeout, MCCommsElement<?>... elements) {
+    /**
+     * Constructor with timeout
+     * @param readCommand Command integer to be sent to the slave device
+     * @param expectedReplyCommand Command integer expected in reply packet
+     * @param priority priority level of this task
+     * @param readReplyTimeoutMs number of milliseconds to wait until no reply packet is to be expected
+     * @param elements MCCommsElements to be mapped, usually in the form of a ChannelMapper
+     */
+    public ReadMCCommsTask(int readCommand, int expectedReplyCommand, Priority priority, int readReplyTimeoutMs, MCCommsElement<?>... elements) {
         super(readCommand, priority, elements);
         this.expectedReplyCommand = expectedReplyCommand;
-        this.readReplyTimeout = readReplyTimeout;
+        this.readReplyTimeoutMs = readReplyTimeoutMs;
     }
+
 
 
     /**
-     * Sends a query for this AbstractMCCommsTask to the MCComms device
+     * Sends a query for this ReadTask to the MCComms device
      *
-     * @throws MCCommsException
+     * @throws MCCommsException command mismatch
      */
     @Override
     public void executeQuery() throws MCCommsException {
@@ -42,7 +61,7 @@ public class ReadMCCommsTask extends AbstractMCCommsTask implements ManagedTask 
         MCCommsBridge bridge = parentComponent.getMCCommsBridgeAtomicRef().get();
         int slaveAddress = parentComponent.getSlaveAddress();
         bridge.getTXPacketQueue().add(new MCCommsPacket(this.command, bridge.getMasterAddress(), slaveAddress));
-        MCCommsPacket commandReplyPacket = parentComponent.getPacket(expectedReplyCommand, readReplyTimeout);
+        MCCommsPacket commandReplyPacket = parentComponent.getPacket(expectedReplyCommand, readReplyTimeoutMs);
         if (commandReplyPacket != null) {
             //retrieve payload
             int[] payload = commandReplyPacket.getPayload();

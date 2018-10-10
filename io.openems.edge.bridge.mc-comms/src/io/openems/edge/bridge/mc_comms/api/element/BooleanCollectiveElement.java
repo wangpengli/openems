@@ -7,6 +7,10 @@ import java.util.Optional;
 
 public class BooleanCollectiveElement extends Abstract8BitElement<Byte> {
 
+    /**
+     * Holds 8 bits, each of which maps to a boolean channel
+     * @param byteAddress
+     */
     BooleanCollectiveElement(int byteAddress) {
         super(byteAddress, OpenemsType.INTEGER);
     }
@@ -23,5 +27,6 @@ public class BooleanCollectiveElement extends Abstract8BitElement<Byte> {
 
     @Override
     public void setNextWriteValue(Optional<Byte> valueOpt) throws OpenemsException {
+        valueOpt.ifPresent(this::setValue);
     }
 }

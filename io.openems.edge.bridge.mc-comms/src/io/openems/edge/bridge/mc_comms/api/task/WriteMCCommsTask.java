@@ -11,14 +11,28 @@ import io.openems.edge.common.taskmanager.Priority;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Task for writing to a slave device
+ */
 public class WriteMCCommsTask extends AbstractMCCommsTask implements ManagedTask {
     private final boolean ackBeforeWrite;
 
+    /**
+     * Constructor
+     * @param command write command to be sent
+     * @param priority priority of this task
+     * @param ackBeforeWrite establish a connection before writing to the serial bus
+     * @param elements elements containing values to be written
+     */
     WriteMCCommsTask(int command, Priority priority, boolean ackBeforeWrite, MCCommsElement<?>... elements) {
         super(command, priority, elements);
         this.ackBeforeWrite = ackBeforeWrite;
     }
 
+    /**
+     * Writes bytes to the serial bus
+     * @throws MCCommsException connection error
+     */
     @Override
     public void executeQuery() throws MCCommsException {
         MCCommsProtocol protocol = this.getProtocol();

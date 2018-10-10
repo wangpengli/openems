@@ -33,6 +33,11 @@ import java.util.stream.Stream;
 @Designate( ocd= Config.class, factory=true)
 
 @Component(name="io.openems.edge.bridge.mc-comms")
+
+/**
+ * MCCommsBridge: Creates a serial master that can communicate with MCComms slave devices, and interface between slaves
+ * and controllers
+ */
 public class MCCommsBridge extends AbstractOpenemsComponent implements BridgeMCComms {
 
 	private final Multimap<String, MCCommsProtocol> protocols = Multimaps
@@ -63,7 +68,9 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements BridgeMCC
 	private final SerialByteHandler serialByteHandler  = new SerialByteHandler(this.serialPortAtomicRef, timedByteQueue);
 	private final PacketPicker packetPicker = new PacketPicker();
 
-
+	/**
+	 * Constructor
+	 */
 	public MCCommsBridge() {
 		Stream.of(
 				Arrays.stream(OpenemsComponent.ChannelId.values()).map(channelId -> {
@@ -78,8 +85,8 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements BridgeMCC
 	/**MCCommsPacketBuffer
 	 * Adds the protocol
 	 *
-	 * @param sourceId
-	 * @param protocol
+	 * @param sourceId The source to which the protocol must be mapped
+	 * @param protocol The MCComms protocol to be added
 	 */
 	@Override
 	public void addProtocol(String sourceId, MCCommsProtocol protocol) {
@@ -94,19 +101,33 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements BridgeMCC
 		this.protocols.removeAll(sourceId);
 	}
 
-
+	/**
+	 * @return a Multimap containing all protocols
+	 */
 	public Multimap<String, MCCommsProtocol> getProtocols() {
 		return protocols;
 	}
 
+	/**
+	 * @return the serial master address of this bridge
+	 */
 	public int getMasterAddress() {
 		return masterAddress;
 	}
 
+	/**
+	 * Allows component controllers to register a transfer queue used to exchange packets with their respective slave
+	 * devices
+	 * @param sourceAddress slave address of the device
+	 * @param transferQueue transferQueue to be registered
+	 */
 	public void registerTransferQueue(int sourceAddress, LinkedTransferQueue<MCCommsPacket> transferQueue) {
 		transferQueues.put(sourceAddress, transferQueue);
 	}
 
+	/**
+	 * @return the deque used to queue outgoing packets waiting to be written to the serial bus
+	 */
 	public ConcurrentLinkedDeque<MCCommsPacket> getTXPacketQueue() {
 		return TXPacketQueue;
 	}
@@ -149,6 +170,9 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements BridgeMCC
 		super.deactivate();
 	}
 
+	/**
+	 * Pulls packets from the read packets cache and puts them in the transferQueue corresponding to their sourceAddress
+	 */
 	private class PacketPicker extends Thread {
 		public void run() {
 			while (true) {
@@ -175,6 +199,9 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements BridgeMCC
 		}
 	}
 
+	/**
+	 * waits for bytes to come in from the serial port and attempts to construct valid packets
+	 */
 	private class PacketBuilder extends Thread {
 
 		private LinkedBlockingDeque<TimedByte> timedByteQueue;
@@ -261,6 +288,9 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements BridgeMCC
 		}
 	}
 
+	/**
+	 * Reads and writes raw bytes from/to the serial bus
+	 */
 	private class SerialByteHandler extends Thread {
 
 		private final AtomicReference<SerialPort> serialPortAtomicRef;
@@ -302,7 +332,8 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements BridgeMCC
 								outputStream.write(packet.getPacketBuffer().array());
 								outputStream.flush();
 							} catch (IOException e) {
-								resume(); //TODO log write errors
+								logger.warn(e.getMessage());
+								resume();
 							}
 						});
 					try {
@@ -315,6 +346,9 @@ public class MCCommsBridge extends AbstractOpenemsComponent implements BridgeMCC
 		}
 	}
 
+	/**
+	 * Holds serial-read byte as well as the time at which it was received
+	 */
 	private class TimedByte{
 
 		private final long time;
