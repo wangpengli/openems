@@ -9,19 +9,6 @@
 
 	<packaging>pom</packaging>
 
-	<repositories>
-		<repository>
-			<id>maven-restlet</id>
-			<name>Public online Restlet repository</name>
-			<url>http://maven.restlet.org</url>
-		</repository>
-		<!--<repository>-->
-			<!--<id>maven-restlet</id>-->
-			<!--<name>Alternate restlet repo</name>-->
-			<!--<url>http://repo.spring.io/plugins-release/org/restlet/jse/org.restlet/2.4.0/</url>-->
-		<!--</repository>-->
-	</repositories>
-
 	<dependencies>
 		<!-- ch.* -->
 		<dependency>
@@ -121,16 +108,6 @@
 			<groupId>org.msgpack</groupId>
 			<artifactId>msgpack-core</artifactId>
 			<version>0.8.16</version>
-		</dependency>
-		<dependency>
-			<groupId>org.restlet.jse</groupId>
-			<artifactId>org.restlet</artifactId>
-			<version>2.4.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.restlet.jse</groupId>
-			<artifactId>org.restlet.ext.slf4j</artifactId>
-			<version>2.4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
