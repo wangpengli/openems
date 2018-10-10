@@ -8,32 +8,37 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 
 public class Utils {
-    public static Stream<? extends AbstractReadChannel<?>> initializeChannels(BatteryMK1 c) {
+    public static Stream<? extends AbstractReadChannel<?>> initializeChannels(BatteryMK1 mk1) {
         return Stream.of( //
                 Arrays.stream(OpenemsComponent.ChannelId.values()).map(channelId -> {
                     switch (channelId) {
                         case STATE:
-                            return new StateCollectorChannel(c, channelId);
+                            return new StateCollectorChannel(mk1, channelId);
                     }
                     return null;
                 }), Arrays.stream(Battery.ChannelId.values()).map(channelId -> {
                     switch (channelId) {
-                        case BATTERY_TEMP:
-                        case SOH:
                         case SOC:
-                        case CAPACITY_KWH:
+                        case SOH:
+                        case BATTERY_TEMP:
+                        case MAX_CAPACITY:
                         case CHARGE_MAX_CURRENT:
                         case CHARGE_MAX_VOLTAGE:
                         case DISCHARGE_MAX_CURRENT:
                         case DISCHARGE_MIN_VOLTAGE:
-                        case MAX_CAPACITY:
-                            return new IntegerReadChannel(c, channelId);
+                        case CAPACITY_KWH:
+                            return new IntegerReadChannel(mk1, channelId);
+                        case READY_FOR_WORKING:
+                            return new BooleanReadChannel(mk1, channelId);
+                        default:
+                            break;
                     }
                     return null;
-                }), Arrays.stream(Battery.ChannelId.values()).map(channelId -> {
+                }), Arrays.stream(BatteryMK1.ChannelId.values()).map(channelId -> {
                     switch (channelId) {
-                        case READY_FOR_WORKING:
-                            return new BooleanReadChannel(c, channelId);
+                        case AVERAGE_CURRENT:
+                        case AVERAGE_VOLTAGE:
+                            return new IntegerReadChannel(mk1, channelId);
                     }
                     return null;
                 })

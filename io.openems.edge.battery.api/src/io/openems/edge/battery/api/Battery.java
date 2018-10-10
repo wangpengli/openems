@@ -11,7 +11,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 @ProviderType
 public interface Battery extends OpenemsComponent {
 
-	public enum ChannelId implements io.openems.edge.common.channel.doc.ChannelId {
+	enum ChannelId implements io.openems.edge.common.channel.doc.ChannelId {
 		/**
 		 * State of Charge
 		 * 

@@ -68,7 +68,7 @@ public class BatteryMK1 extends AbstractMCCommsComponent implements Battery, Ope
 						m(ChannelId.AVERAGE_CURRENT, new Integer16BitElement(8), ElementToChannelConverter.SCALE_FACTOR_1),
 						m(ChannelId.AVERAGE_VOLTAGE, new Integer16BitElement(10), ElementToChannelConverter.SCALE_FACTOR_1)
 				)
-//                ,
+//				,
 //				new ReadMCCommsTask(READ_COMMAND_1, EXPECTED_REPLY_1, Priority.LOW,
 //						m(Battery.ChannelId.CHARGE_MAX_CURRENT, new Integer16BitElement(0), ElementToChannelConverter.SCALE_FACTOR_1),
 //						m(Battery.ChannelId.CHARGE_MAX_VOLTAGE, new Integer16BitElement(2), ElementToChannelConverter.SCALE_FACTOR_1),
@@ -80,9 +80,9 @@ public class BatteryMK1 extends AbstractMCCommsComponent implements Battery, Ope
 
 	@Activate
 	void activate(ComponentContext context, Config config) {
+		Utils.initializeChannels(this).forEach(this::addChannel);
 		super.activate(context, config.service_pid(), config.id(), config.enabled(), cm, config.slaveAddress(), config.MCCommsBridge_id());
 		bridgeID = config.MCCommsBridge_id();
-		Utils.initializeChannels(this).forEach(this::addChannel);
 	}
 
 	@Deactivate
